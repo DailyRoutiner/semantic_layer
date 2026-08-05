@@ -1,0 +1,20 @@
+# dbt 접속 정보. 보통 ~/.dbt/profiles.yml 에 두지만,
+# 프로젝트 안에 두고 --profiles-dir . 로 지정하는 편이 협업에 낫습니다.
+#
+# 실행 예:
+#   ..\..\.venv\Scripts\dbt.exe run --profiles-dir .
+#
+# env_var 로 읽으므로 .env 값을 셸 환경변수로 올려두거나, 아래 기본값을 그대로 쓰세요.
+
+ontology_text2sql:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PGHOST', 'localhost') }}"
+      port: "{{ env_var('PGPORT', '5432') | int }}"
+      user: "{{ env_var('PGUSER', 'dbt') }}"
+      password: "{{ env_var('PGPASSWORD', 'dbt_password') }}"
+      dbname: "{{ env_var('PGDATABASE', 'analytics') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'analytics') }}"
+      threads: 4

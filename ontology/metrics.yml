@@ -1,0 +1,84 @@
+# 지표(metric) = 집계 정의.
+#
+# **이 파일이 온톨로지의 핵심 가치입니다.**
+# "매출이 뭐냐"를 여기서 한 번만 정하면, 누가 묻든 같은 숫자가 나옵니다.
+#
+# TODO: total_revenue 를 참고해 지표를 4~5개 더 추가하세요.
+
+version: 1
+
+metrics:
+
+  # ────────────────────────────────────────────────────────────
+  # ✅ 완성 예시
+  # ────────────────────────────────────────────────────────────
+  - name: total_revenue
+    label: 총매출
+    description: 판매된 항목 금액의 합계. 세금·할인 미포함(Chinook 에는 해당 개념이 없음).
+    synonyms: [매출, 매출액, 판매금액, 판매액, 수익, revenue, sales amount]
+    entity: sales                       # 어느 엔티티에서 계산하나
+    expression: "SUM(fct_sales.line_amount)"
+    format: currency
+    dimensions:                         # 이 지표를 쪼갤 수 있는 축
+      - customer.customer_country
+      - track.genre_name
+      - track.artist_name
+      - employee.employee_name
+      - sales.invoice_year
+      - sales.invoice_month
+    note: |
+      fct_sales.line_amount = unit_price * quantity.
+      stg_invoices.invoice_total 과 헷갈리지 말 것. 그건 주문 단위 합계라
+      invoice_line 과 함께 집계하면 중복 계산된다.
+
+  # ────────────────────────────────────────────────────────────
+  # TODO: order_count (주문수)
+  #   expression: "COUNT(DISTINCT fct_sales.invoice_id)"
+  #   힌트: COUNT(*) 로 쓰면 '주문 상세 줄 수'가 됩니다. 전혀 다른 숫자예요.
+  #        이런 함정을 사람이 미리 막아두는 게 이 파일의 존재 이유입니다.
+  # ────────────────────────────────────────────────────────────
+
+  - name: order_count
+    label: 주문 수
+    description: 판매된 주문 건수.
+    synonyms: [판매 수]
+    entity: sales
+    expression: count(distinct fct_sales.invoice_id)
+    format: number
+    dimensions:
+      - customer.customer_country
+      - track.genre_name
+      - track.artist_name
+      - employee.employee_name
+      - sales.invoice_month
+      - sales.invoice_year
+  # ────────────────────────────────────────────────────────────
+  # TODO: units_sold (판매수량)
+  #   expression: "SUM(fct_sales.quantity)"
+  # ────────────────────────────────────────────────────────────
+  - name: units_sold
+    label: 판매수량
+    description: 음악 판매수량을 집계
+    synonyms: [판매량]
+    entity: sales
+    expression: sum(fct_sales.quantity)
+    format: number
+    dimensions:
+      - track.genre_name
+      - track.artist_name
+      - employee.employee_name
+      - sales.invoice_month
+      - sales.invoice_year
+      - customer.customer_country
+  # ────────────────────────────────────────────────────────────
+  # TODO: avg_order_value (객단가 / 평균 주문금액)
+  #   힌트: AVG(line_amount) 가 아닙니다. 주문 단위로 먼저 묶어야 합니다.
+  #        expression: "SUM(fct_sales.line_amount) / NULLIF(COUNT(DISTINCT fct_sales.invoice_id), 0)"
+  #        NULLIF 로 0 나누기를 막는 것까지 여기서 정해두세요.
+  # ────────────────────────────────────────────────────────────
+
+  # ────────────────────────────────────────────────────────────
+  # TODO: customer_count (구매 고객수)
+  #   expression: "COUNT(DISTINCT fct_sales.customer_id)"
+  #   note 에 "전체 고객수가 아니라 '구매 이력이 있는' 고객수" 라고 명시하세요.
+  # ────────────────────────────────────────────────────────────

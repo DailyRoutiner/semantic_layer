@@ -1,0 +1,76 @@
+# 마트 모델의 문서 + 테스트.
+#
+# 왜 중요한가:
+#   1. description 은 나중에 온톨로지 작성의 원재료가 됩니다.
+#   2. 테스트는 "LLM이 틀린 게 아니라 데이터가 틀린 경우"를 잡아냅니다.
+#      Text-to-SQL 이 이상한 답을 낼 때 원인의 절반은 데이터 품질입니다.
+#
+# 실행:  dbt test
+#
+# TODO: dim_track, dim_employee, fct_sales 항목을 추가하고 테스트를 채우세요.
+
+version: 2
+
+models:
+  - name: dim_customer
+    description: 고객 차원. 한 행 = 고객 1명.
+    columns:
+      - name: customer_id
+        description: 고객 고유 식별자
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_country
+        description: 고객 거주 국가
+
+  # TODO: dim_track
+  #   - track_id 에 unique, not_null
+  #   - genre_name 에 accepted_values 를 쓸지 고민해 보세요 (장르가 25개라 관리 부담이 큽니다)
+
+  - name: dim_track
+    description: 곡, 장르, 앨범, 아티스트
+    columns:
+      - name: track_id
+        description: 트랙 고유 식별자
+        data_tests:
+          - unique
+          - not_null
+  - name: dim_employee
+    description: 관리자 차원
+    columns: 
+      - name: employee_id
+        descriptioin: 관리자 식별자
+        data_tests:
+          - unique
+          - not_null
+
+  # TODO: fct_sales  <- 여기가 제일 중요합니다
+  #   - sales_id: unique, not_null
+  #   - customer_id: relationships 테스트로 dim_customer 를 참조하는지 검사
+  #       tests:
+  #         - relationships:
+  #             to: ref('dim_customer')
+  #             field: customer_id
+  #   - line_amount: not_null
+  #
+  # relationships 테스트가 곧 '외래키 검증'입니다.
+  # 프로젝트 1에서 FK가 없어 고생했던 걸 여기서는 dbt가 지켜줍니다.
+
+  - name: fct_sales
+    description: 주문 상세 내역
+    columns:
+      - name: sales_id
+        description: sales 식별자
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: 고객 id 
+        data_tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: line_amount
+        descriptioin: 구매 금액
+        data_tests:
+          - not_null

@@ -1,0 +1,51 @@
+# 업무 용어집.
+#
+# 두 종류를 담습니다.
+#   1. terms       — 정의가 필요한 업무 용어 ("활성 고객"이 정확히 뭔가)
+#   2. not_covered — 이 DB에 **없는** 정보 (환각 방지용)
+#
+# 2번이 특히 효과적입니다. 프로젝트 1에서 "직원 연봉" 질문에 LLM이
+# 없는 컬럼을 지어냈던 것을 기억하세요. 여기 적어두면 검색 단계에서 잡힙니다.
+#
+# TODO: 아래 예시를 채우고 늘려가세요.
+
+version: 1
+
+terms:
+
+  - term: 활성 고객
+    synonyms: [액티브 고객, 유효 고객]
+    definition: 최근 12개월 이내에 1건 이상 구매한 고객
+    sql_hint: |
+      EXISTS (
+        SELECT 1 FROM analytics_marts.fct_sales s
+        WHERE s.customer_id = c.customer_id
+          AND s.invoice_date >= (SELECT MAX(invoice_date) FROM analytics_marts.fct_sales) - INTERVAL '12 months'
+      )
+    note: |
+      Chinook 데이터는 2009~2013년으로 고정돼 있습니다. CURRENT_DATE 기준으로
+      계산하면 활성 고객이 0명이 됩니다. 반드시 데이터의 최대 날짜를 기준으로 하세요.
+
+  # TODO: '작년', '올해' 같은 상대 기간
+  #   - term: 작년
+  #     definition: 데이터에 존재하는 가장 최근 연도의 직전 연도
+  #     sql_hint: "invoice_year = (SELECT MAX(invoice_year) FROM analytics_marts.fct_sales) - 1"
+  #     이걸 정의해두지 않으면 LLM이 EXTRACT(YEAR FROM CURRENT_DATE) - 1 을 써서
+  #     빈 결과를 냅니다. 프로젝트 1의 함정 질문이 정확히 이 경우였습니다.
+
+  # TODO: '베스트셀러', '인기 있는' 등 순위 관련 용어
+  # TODO: 회사 고유 용어가 있다면 추가
+
+
+# 이 DB에 존재하지 않는 정보. 질문이 여기에 걸리면 SQL 생성 없이 바로 거절합니다.
+not_covered:
+
+  - topic: 직원 급여
+    synonyms: [연봉, 급여, 월급, 인건비, salary]
+    reason: Chinook 의 employee 테이블에는 급여 컬럼이 없습니다.
+
+  # TODO: 아래를 채우세요
+  # - topic: 원가 / 마진
+  # - topic: 재고
+  # - topic: 스트리밍 재생수 / 조회수
+  # - topic: 고객 연령 / 성별

@@ -1,0 +1,39 @@
+# 원본(raw) 테이블 등록.
+#
+# 왜 등록하나:
+#   - 모델에서 raw.customer 라고 직접 쓰지 않고 {{ source('chinook_raw', 'customer') }} 로 씁니다.
+#   - 그래야 dbt가 계보(lineage)를 추적하고, 스키마 이름을 한 곳에서 바꿀 수 있습니다.
+#
+# TODO: customer 외 나머지 10개 테이블을 추가하세요.
+#   raw 스키마의 실제 테이블 이름은 아래 명령으로 확인:
+#     docker compose exec postgres psql -U dbt -d analytics -c "\dt raw.*"
+
+version: 2
+
+sources:
+  - name: chinook_raw
+    schema: raw
+    description: Chinook 원본을 그대로 적재한 테이블
+    tables:
+      - name: customer
+        description: 고객 원본
+      - name: invoice
+        description: 주문 원본
+      - name: invoice_line
+        description: 주문 상세
+      - name: track
+        description: 트랙
+      - name: album
+        description: 음악 앨범
+      - name: artist
+        description: 음악가
+      - name: genre
+        description: 장르
+      - name: employee
+        description: 관리자
+      - name: playlist
+        description: 음악 목록
+      - name: playlist_track
+        description: 음악 목록 곡
+      - name: media_type
+        description: 음원 종류

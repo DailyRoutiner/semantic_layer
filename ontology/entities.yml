@@ -1,0 +1,201 @@
+version: 1
+
+entities:
+
+  - name: customer
+    label: 고객
+    description: 음악을 구매하는 개인 고객. 국가/도시 정보와 담당 영업사원을 가진다.
+    synonyms: [구매자, 회원, 손님, 바이어, customer, buyer]
+    model: dim_customer          
+    schema: analytics_marts      
+    primary_key: customer_id
+    grain: 한 행 = 고객 1명
+
+    attributes:
+      - name: customer_id
+        label: 고객ID
+        type: id
+
+      - name: customer_name
+        label: 고객명
+        type: text
+        synonyms: [이름, 고객 이름, 성함]
+
+      - name: customer_country
+        label: 국가
+        type: category
+        synonyms: [나라, 거주국, country]
+        sample_values: [USA, Canada, France, Brazil, Germany]
+        note: 고객의 거주 국가. 청구 국가(fct_sales.country)와 대부분 같지만 개념이 다르다.
+
+      - name: customer_city
+        label: 도시
+        type: category
+        synonyms: [지역, 시]
+
+      - name: email
+        label: 이메일
+        type: text
+
+      - name: support_rep_name
+        label: 담당자명
+        type: text
+        synonyms: [담당 직원, 영업 담당자, 담당자]
+        note: 이 고객을 담당하는 영업사원 이름. 이미 조인돼 있어 별도 조인이 필요 없다.
+
+  # ────────────────────────────────────────────────────────────
+  # TODO: sales  (fct_sales)
+  #   - 이건 '팩트' 엔티티입니다. 다른 엔티티들과 연결되는 중심입니다.
+  #   - synonyms 에 [판매, 매출, 주문, 구매, 거래] 를 넣으세요
+  #   - grain: 한 행 = 주문 상세 1줄
+  #   - attributes 에 quantity, line_amount, invoice_date, invoice_year, country 등
+  #   - 힌트: 금액 컬럼에는 note 로 "세금 미포함" 같은 단서를 꼭 적으세요
+  # ────────────────────────────────────────────────────────────
+  - name: sales
+    label: 판매
+    description: 고객의 주문 상세 내력, 언제, 누가, 무슨 곡을, 얼마나, 얼마에 샀는지 기록한다. 모든 매출, 판매량 지표의 기준이 되는 중심 테이블.
+    synonyms: [판매, 매출, 주문, 구매, 거래]
+    model: fct_sales
+    schema: analytics_marts
+    primary_key: sales_id
+    grain: 한 행 = 주문 상세 1줄
+
+    attributes:
+      - name: sales_id
+        label: 주문 상세 id
+        type: id
+      
+      - name: invoice_id
+        label: 주문 id
+        type: id
+      
+      - name: quantity
+        label: 구매수
+        type: number 
+        synonyms: [수량, 판매량, 구매 건수]
+
+      - name: line_amount
+        label: 구매 금액
+        type: number 
+        synonyms: [금액, 매출, 판매금액, 매출액, revenue]
+        note: 세금 미포함
+
+      - name: invoice_date
+        label: 구매일자
+        type: date 
+        synonyms: [구매일, 주문일, 판매일, 일자]
+
+      - name: invoice_year
+        label: 구매년도
+        type: number 
+      
+      - name: invoice_month
+        label: 구매 월
+        type: number 
+
+      - name: country
+        label: 청구 국가
+        type: category
+        synonyms: [국가, 나라, 판매 국가]
+        note: 주문서에 기재된 청구 국가. 고객 거주 국가(customer.customer_country)와 다를 수 있다. "국가별 매출"은 보통 이 컬럼을 사용한다.
+      
+
+  # ────────────────────────────────────────────────────────────
+  # TODO: track  (dim_track)
+  #   - synonyms: [곡, 노래, 음악, 트랙, song]
+  #   - genre_name 은 sample_values 를 넉넉히 넣으세요.
+  #     사용자가 "락 음악" 이라 물었을 때 'Rock' 을 찾아야 합니다.
+  #       sample_values: [Rock, Jazz, Metal, Latin, Pop, Classical, Reggae, Blues]
+  #   - duration_minutes 에 synonyms: [재생시간, 길이, 곡 길이]
+  # track_name,duration_minutes,unit_price,album_title,artist_name,genre_name
+  # ────────────────────────────────────────────────────────────
+
+  - name: track
+    label: 노래
+    description: 고객이 듣는 곡명, 아티스트, 앨범, 장르 목록입니다.
+    synonyms: [곡, 노래, 음악, 트랙, song]
+    model: dim_track
+    schema: analytics_marts
+    primary_key: track_id
+    grain: 한 행 = 노래 1곡
+
+    attributes:
+      - name: track_id
+        label: 음악 id
+        type: id
+
+      - name: track_name
+        label: 곡명
+        type: text
+        synonyms: [곡명, 노래 제목, 제목]
+
+      - name: album_title
+        label: 앨범명
+        type: category
+
+      - name: artist_name
+        label: 아티스트명
+        type: category
+        synonyms: [가수, 뮤지션, 아티스트]
+
+      - name: genre_name
+        label: 장르명
+        type: category
+        synonyms: [장르, 음악 장르, 종류]
+        sample_values: [Rock, Jazz, Metal, Latin, Pop, Classical, Reggae, Blues]
+        note: 장르가 없는 곡은 '미분류'로 채워져 있다.
+
+      - name: duration_minutes
+        label: 재생시간
+        type: number
+        synonyms: [재생시간, 길이, 곡 길이]
+        
+
+
+  # ────────────────────────────────────────────────────────────
+  # TODO: employee  (dim_employee)
+  #   - synonyms: [직원, 사원, 담당자, 영업사원]
+  #   - manager_name 에 note: "값이 있으면 이 직원에게 상사가 있다는 뜻"
+  # employee_name,job_title,hire_date,country,manager_name
+  # ────────────────────────────────────────────────────────────
+
+  - name: employee
+    label: 직원
+    description: 고객을 담당하는 직원 목록입니다.
+    synonyms: [직원, 사원, 담당자, 영업사원]
+    model: dim_employee
+    schema: analytics_marts
+    primary_key: employee_id
+    grain: 한 행 = 직원 1명
+
+    attributes:
+      - name: employee_id
+        label: 직원 id
+        type: id
+
+      - name: employee_name
+        label: 직원명
+        type: text
+      
+      - name: job_title
+        label: 직업명
+        type: text
+        synonyms: [직급, 직책, 역할]
+
+      - name: hire_date
+        label: 입사일자
+        type: date
+      
+      - name: country
+        label: 직원 근무 국가
+        type: category
+        note: 직원이 근무하는 국가 이다.
+
+      - name: manager_name
+        label: 상사명
+        type: text
+        synonyms: [상사, 관리자, 매니저, 상급자]
+        note: 값이 있으면 이 직원에게 상사가 있다는 뜻
+
+
+

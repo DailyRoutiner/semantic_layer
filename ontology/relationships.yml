@@ -1,0 +1,59 @@
+# 엔티티 간 조인 경로.
+#
+# 목적: LLM이 JOIN 을 '추론'하지 않게 만드는 것.
+#       여기 적힌 경로만 사용하게 강제합니다.
+#
+# 프로젝트 1에서는 외래키를 추론해서 다리 테이블을 찾아야 했습니다.
+# 여기서는 사람이 미리 확정합니다. 대신 마트가 스타 스키마라 경로가 훨씬 단순합니다.
+#
+#         dim_customer
+#              |
+#   dim_track — fct_sales — dim_employee
+#
+# TODO: 아래 예시를 참고해 나머지 관계를 채우세요.
+
+version: 1
+
+relationships:
+
+  # ✅ 완성 예시
+  - name: sales_to_customer
+    from: sales               # entities.yml 의 name
+    to: customer
+    from_key: customer_id     # fct_sales 쪽 컬럼
+    to_key: customer_id       # dim_customer 쪽 컬럼
+    cardinality: many_to_one  # 판매 여러 건 -> 고객 1명
+    join_type: left
+    description: 판매 1건은 고객 1명에게 속한다.
+
+  # TODO: sales_to_track
+  #   from: sales / to: track / key: track_id / many_to_one
+  #   "장르별 매출" 질문이 이 관계 하나로 풀립니다.
+
+  - name: sales_to_track
+    from: sales
+    to: track
+    from_key: track_id
+    to_key: track_id
+    cardinality: many_to_one
+    join_type: left
+    description: 판매 1건은 노래 1건에 속한다.
+
+  # TODO: sales_to_employee
+  #   from: sales / to: employee / key: employee_id / many_to_one
+  #   주의: fct_sales.employee_id 는 고객의 담당 영업사원입니다.
+  #        description 에 그 의미를 반드시 적으세요. 안 그러면
+  #        "직원별 매출"이 무엇을 뜻하는지 LLM이 오해합니다.
+
+  - name: sales_to_employee
+    from: sales
+    to: employee
+    from_key: employee_id
+    to_key: employee_id
+    cardinality: many_to_one
+    join_type: left
+    description: 판매 1건은 담당 직원 1명에 속한다.
+
+  # TODO: customer_to_employee (선택)
+  #   dim_customer 에 support_rep_name 이 이미 있으므로 없어도 됩니다.
+  #   "이미 비정규화된 컬럼이 있으면 관계를 만들지 않는다" 는 판단도 설계입니다.

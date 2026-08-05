@@ -1,0 +1,23 @@
+# --- dbt (Python 3.13에서 설치 실패하면 이 두 줄을 지우고 전역 dbt 사용) ---
+dbt-core>=1.10
+dbt-postgres>=1.9
+
+# --- DB ---
+psycopg[binary]>=3.2
+SQLAlchemy>=2.0
+pandas>=2.2
+
+# --- 온톨로지 ---
+PyYAML>=6.0
+
+# --- LLM / RAG ---
+python-dotenv>=1.0
+langchain-core>=1.0
+langchain-openai>=1.0
+langchain-ollama>=1.0
+langchain-chroma>=1.0
+chromadb>=1.0
+langgraph>=1.0
+
+# --- 노트북 ---
+ipykernel>=6.29

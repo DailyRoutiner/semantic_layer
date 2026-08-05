@@ -1,0 +1,18 @@
+name: ontology_text2sql
+version: "1.0.0"
+profile: ontology_text2sql
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  ontology_text2sql:
+    staging:
+      # staging은 view로 만듭니다. 원본을 정리만 하므로 저장할 이유가 없습니다.
+      +materialized: view
+      +schema: staging
+    marts:
+      # marts는 table로 만듭니다. 조인이 무겁고 반복 조회되므로 미리 계산해 둡니다.
+      +materialized: table
+      +schema: marts

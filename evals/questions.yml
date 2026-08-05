@@ -1,0 +1,63 @@
+# 평가셋.
+#
+# **온톨로지를 쓰기 전에 이 파일부터 채우는 걸 권합니다.**
+# "어떤 질문에 답해야 하는가"가 정해져야 온톨로지에 무엇을 넣을지 알 수 있습니다.
+#
+# 프롬프트나 온톨로지를 고칠 때마다 이 목록 전체를 돌려서
+# "고쳤더니 다른 게 깨지지 않았나"를 확인하세요. 감으로 튜닝하면 반드시 뒷걸음질칩니다.
+#
+# TODO: 각 카테고리에 질문을 5개 이상씩 채우세요.
+
+version: 1
+
+cases:
+
+  # ── 기본: 단일 지표 + 단일 차원 ──────────────────────────
+  - id: revenue_by_country
+    question: 국가별 매출 상위 5개국 알려줘
+    expect_entities: [sales, customer]
+    expect_metrics: [total_revenue]
+    expect_sql_contains: ["SUM", "line_amount", "GROUP BY"]
+    note: 가장 기본적인 질문. 이게 안 되면 다른 건 볼 필요도 없습니다.
+
+  # TODO: 장르별 판매량, 연도별 매출, 담당자별 매출 ...
+
+  # ── 다중 조인 ──────────────────────────────────────────
+  - id: top_artist_revenue
+    question: 매출이 가장 높은 아티스트 3명은?
+    expect_entities: [sales, track]
+    expect_metrics: [total_revenue]
+    note: |
+      dim_track 에 artist_name 을 미리 넣어뒀다면 조인이 1홉으로 끝납니다.
+      프로젝트 1에서는 InvoiceLine->Track->Album->Artist 4중 조인이었습니다.
+      이 케이스가 마트 설계의 가치를 증명합니다.
+
+  # TODO: 더 추가
+
+  # ── 용어 해석이 필요한 질문 ────────────────────────────
+  - id: last_year_revenue
+    question: 작년 매출이 얼마야?
+    expect_terms: [작년]
+    note: |
+      데이터가 2009~2013이므로 CURRENT_DATE 기준으로 계산하면 빈 결과가 나옵니다.
+      glossary.yml 의 '작년' 정의가 제대로 먹히는지 보는 케이스입니다.
+
+  # TODO: '활성 고객', '베스트셀러' 등
+
+  # ── 거절해야 하는 질문 (not_covered) ───────────────────
+  - id: employee_salary
+    question: 직원들 연봉이 얼마야?
+    expect_blocked: true
+    note: SQL 을 만들면 안 됩니다. 검색 단계에서 차단돼야 합니다.
+
+  # TODO: 재고, 원가, 고객 연령 등
+
+  # ── 함정: 비슷하지만 다른 질문 ─────────────────────────
+  - id: order_count_vs_line_count
+    question: 주문이 몇 건이야?
+    expect_metrics: [order_count]
+    note: |
+      COUNT(*) 로 답하면 '주문 상세 줄 수'라 틀립니다.
+      metrics.yml 의 order_count 정의(COUNT DISTINCT invoice_id)가
+      실제로 쓰이는지 확인하는 케이스입니다.
+      **이런 함정 케이스가 평가셋의 가치를 결정합니다.**

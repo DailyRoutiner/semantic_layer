@@ -11,6 +11,7 @@ dbt/logs/
 
 scripts/
 notebooks/
+docs/blog/
 
 # Environment / secrets
 .env
